@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--引入外部配置文件-->
+    <context:property-placeholder location="classpath:db.properties"/>
+
+    <!--配置数据库连接池-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <!--读取外部文件-->
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="url" value="${jdbc.url}"/>
+
+            <!--在配置文件中写死-->
+<!--        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+<!--        <property name="username" value="jdbc:mysql://localhost:3307/test?useUnicode=true"/>-->
+<!--        <property name="password" value="root"/>-->
+<!--        <property name="url" value="root"/>-->
+    </bean>
+
+      <!--配置SqlSessionFactory-->
+    <bean id="sqlSessionFactoryBean" class="com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean">
+        <!--注入连接池-->
+        <property name="dataSource" ref="dataSource"/>
+        <!--配置别名-->
+        <property name="typeAliasesPackage" value="org.example.pojo"/>
+        <!--配置插件-->
+        <property name="plugins">
+            <array>
+                <ref bean="mybatisPlusInterceptor"/>
+            </array>
+        </property>
+        <property name="mapperLocations" value="classpath:org.example.mapper/*.xml"/>
+    </bean>
+
+    <bean id="mybatisPlusInterceptor" class="com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor">
+        <property name="interceptors">
+            <list>
+                <ref bean="paginationInnerInterceptor"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="paginationInnerInterceptor" class="com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor">
+        <!-- 对于单一数据库类型来说,都建议配置该值,避免每次分页都去抓取数据库类型 -->
+        <constructor-arg name="dbType" value="MYSQL"/>
+    </bean>
+
+    <!--配置扫描mapper接口-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="org.example.mapper"/>
+    </bean>
+
+</beans>
